@@ -2,7 +2,7 @@ include 'configs/test_local.gin'
 
 image_scale = 8
 batch_size = 1024
-max_steps = 10000
+max_steps = 100 #10000 changed by wenzhao
 
 TrainConfig.use_decompose_nerf = True
 
@@ -62,7 +62,7 @@ EvalConfig.num_fixed_time_views = -1
 EvalConfig.use_train_views = True
 EvalConfig.fix_view_eval = True
 EvalConfig.num_fixed_view_frames = -1
-EvalConfig.niter_runtime_eval = 1000
+EvalConfig.niter_runtime_eval = 10 #1000 changed by wenzhao
 EvalConfig.nimg_runtime_eval = 3
 EvalConfig.ex_runtime_eval_targets = ('000031', '000111', '000133')
 
