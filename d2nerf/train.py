@@ -469,12 +469,14 @@ def main(argv):
 
       if FLAGS.debug:
         # vmap version for debugging
+        # Returns a jax.Array from a sequence of jax.Array s on a single device.
         pmodel_fn = jax.vmap(
             _model_fn,
             in_axes=(0, 0, 0, 0, 0),
             axis_name='batch',
         )
       else:
+        # jax.pmap: jax.pmap来进行分布式计算
         pmodel_fn = jax.pmap(
             _model_fn,
             in_axes=(0, 0, 0, 0, 0), 
@@ -482,6 +484,14 @@ def main(argv):
             axis_name='batch',
         )
 
+      # functools.partial 这个高阶函数用于部分应用一个函数。 
+      # 部分应用是指， 基于一个函数创建一个新的可调用对象， 把原函数的某些参数固定。
+      # https://blog.csdn.net/hsc_1/article/details/80769967
+      
+
+      # 所以这里主要看这个render_image怎么搞
+      # evaluation.render_image
+      # 主要看这个render_fn怎么把整体trained model，render出来不一样的东西！
       render_fn = functools.partial(evaluation.render_image,
                                     model_fn=pmodel_fn,
                                     device_count=n_local_devices,
@@ -490,6 +500,9 @@ def main(argv):
                                     use_tsne=False)
 
       save_dir = renders_dir
+      
+      # extra renders: 
+      # DecomposeNerfModel.extra_renders = ('static', 'dynamic', 'blendw', 'mask', 'shadow', 'regular_no_shadow')
       
       extra_render_tags = model.extra_renders
       process_iterator(tag='runtime_eval',
@@ -519,19 +532,24 @@ def process_iterator(tag: str,
                      model: models.NerfModel,
                      extra_render_tags: Optional[tuple],
                      save_out: bool = False):
+  
   """Process a dataset iterator and compute metrics."""
   params = state.optimizer.target['model']
-  save_dir = save_dir / f'{step:08d}' / tag
+  save_dir = save_dir / f'{step:08d}' / tag  #tag='runtime_eval'
+
   for i, (item_id, batch) in enumerate(zip(item_ids, iterator)):
     logging.info('[%s:%d/%d] Processing %s ', tag, i+1, len(item_ids), item_id)
 
+    # model_out是render之后的结果, state: model_utils.TrainState,  rng: The random number generator.
     model_out = render_fn(state, batch, rng=rng)
+
     plot_images(
         tag=tag,
         item_id=item_id,
         model_out=model_out,
         save_dir=save_dir,
-        extra_render_tags=extra_render_tags)
+        extra_render_tags=extra_render_tags) 
+    # extra_render_tags: ('static', 'dynamic', 'blendw', 'mask', 'shadow', 'regular_no_shadow')
 
     if save_out:
       # save all returned arrays for debugging purpose
@@ -549,6 +567,7 @@ def process_iterator(tag: str,
       np.save(str(dict_path / f"{item_id.replace('/', '_')}.npy"), model_out)
 
 
+# 这里具体就是把model_out里的东西画出来
 def plot_images(tag: str,
                 item_id: str,
                 model_out: Any,
@@ -560,15 +579,18 @@ def plot_images(tag: str,
 
   save_dir = save_dir / tag
   save_dir.mkdir(parents=True, exist_ok=True)
+  # regular_rgb_000002.png
   image_utils.save_image(save_dir / f'regular_rgb_{item_id}.png',
                           image_utils.image_to_uint8(rgb))
 
+  # extra_render_tags: ('static', 'dynamic', 'blendw', 'mask', 'shadow', 'regular_no_shadow')
+  # save_dir: save_dir / f'{step:08d}' / tag
+
   if extra_render_tags is not None:
     for extra_tag in extra_render_tags:
+      # dynamic_rgb_000002.png
       image_utils.save_image(save_dir / f'{extra_tag}_rgb_{item_id}.png',
                             image_utils.image_to_uint8(model_out[f'extra_rgb_{extra_tag}'][..., :3]))
-
-
 
 if __name__ == '__main__':
   app.run(main)

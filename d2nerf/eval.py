@@ -608,6 +608,8 @@ def main(argv):
   rng, key = random.split(rng)
   params = {}
   construct_nerf_func = models.construct_nerf if not train_config.use_decompose_nerf else models.construct_decompose_nerf
+  
+  # declare model
   model, params['model'] = construct_nerf_func(
       key,
       batch_size=eval_config.chunk,

@@ -51,6 +51,9 @@ def encode_metadata(model, params, metadata):
   return encoded_metadata
 
 
+# 主要看这里怎么render, 看怎么把不同的static和dynamic的render出来
+# state: model_utils.TrainState.
+
 def render_image(
     state,
     rays_dict,
@@ -118,8 +121,15 @@ def render_image(
         lambda x: x[(proc_id * per_proc_rays):((proc_id + 1) * per_proc_rays)],
         chunk_rays_dict)
     chunk_rays_dict = utils.shard(chunk_rays_dict, device_count)
+    
+    #这里是算出来 model_out
+    print('key_0', key_0)
+    print('key_1', key_1)
+    
     model_out = model_fn(key_0, key_1, state.optimizer.target['model'],
                          chunk_rays_dict, state.extra_params)
+    
+
     if not default_ret_key:
       ret_key = 'fine' if 'fine' in model_out else 'coarse'
     else:
@@ -129,6 +139,7 @@ def render_image(
     ret_maps.append(ret_map)
   ret_map = jax.tree_map(lambda *x: jnp.concatenate(x, axis=0), *ret_maps)
   logging.info('Rendering took %.04s', time.time() - start_time)
+
   out = {}
   for key, value in ret_map.items():
     out_shape = (*batch_shape, *value.shape[1:])
