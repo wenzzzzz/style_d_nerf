@@ -504,6 +504,10 @@ def main(argv):
       # extra renders: 
       # DecomposeNerfModel.extra_renders = ('static', 'dynamic', 'blendw', 'mask', 'shadow', 'regular_no_shadow')
       
+      print('train_eval_ids', train_eval_ids)
+      print('train_eval_iter', train_eval_iter)
+
+      
       extra_render_tags = model.extra_renders
       process_iterator(tag='runtime_eval',
               item_ids=train_eval_ids,
