@@ -125,6 +125,9 @@ def render_image(
     #这里是算出来 model_out
     print('key_0', key_0)
     print('key_1', key_1)
+    print('chunk_rays_dict', chunk_rays_dict)
+    print('state.optimizer.target_model', state.optimizer.target['model'])
+    print('state.extra_params', state.extra_params)
     
     model_out = model_fn(key_0, key_1, state.optimizer.target['model'],
                          chunk_rays_dict, state.extra_params)

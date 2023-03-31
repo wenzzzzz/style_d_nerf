@@ -507,7 +507,7 @@ def main(argv):
       print('train_eval_ids', train_eval_ids)
       print('train_eval_iter', train_eval_iter)
 
-      
+
       extra_render_tags = model.extra_renders
       process_iterator(tag='runtime_eval',
               item_ids=train_eval_ids,
@@ -545,6 +545,7 @@ def process_iterator(tag: str,
     logging.info('[%s:%d/%d] Processing %s ', tag, i+1, len(item_ids), item_id)
 
     # model_out是render之后的结果, state: model_utils.TrainState,  rng: The random number generator.
+    logging.info('calculating model_out')
     model_out = render_fn(state, batch, rng=rng)
 
     plot_images(
