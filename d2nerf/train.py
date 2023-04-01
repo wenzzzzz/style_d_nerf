@@ -36,7 +36,6 @@ import pdb
 from jax.config import config as jax_config
 import shutil
 
-
 from hypernerf import configs
 from hypernerf import datasets
 from hypernerf import gpath
@@ -232,6 +231,7 @@ def main(argv):
 
   devices = jax.local_devices()
   logging.info('Creating datasource')
+
   datasource = exp_config.datasource_cls(
       image_scale=exp_config.image_scale,
       random_seed=exp_config.random_seed,
@@ -259,6 +259,7 @@ def main(argv):
       embeddings_dict=datasource.embeddings_dict,
       near=datasource.near,
       far=datasource.far)
+  ##################  ##################  ##################
 
   # Create Jax iterator.
   logging.info('Creating dataset iterator.')
@@ -463,7 +464,7 @@ def main(argv):
       # 给rays_dict, model计算出结果
       # params: 就是model当前的params
       def _model_fn(key_0, key_1, params, rays_dict, extra_params):
-        
+
         out = model.apply({'params': params},
                           rays_dict,
                           extra_params=extra_params,
