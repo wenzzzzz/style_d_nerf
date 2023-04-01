@@ -709,6 +709,7 @@ class NerfModel(nn.Module):
 
 @gin.configurable(denylist=['name'])
 class StaticNerfModel(nn.Module):
+  # staticNerfModel是单独定义的
   """Static Nerf NN Model with both coarse and fine MLPs.
 
   Attributes:
@@ -1718,7 +1719,7 @@ class DecomposeNerfModel(NerfModel):
       ex_use_white_background = self.use_white_background
       ex_use_green_background = False
       if render_mode == 'static':
-        ex_rgb_d = jnp.zeros_like(ex_rgb_d)
+        ex_rgb_d = jnp.zeros_like(ex_rgb_d) # Return an array of zeros with the same shape and type as a given array.
         ex_sigma_d = jnp.zeros_like(ex_sigma_d)
         ex_shadow_r = jnp.zeros_like(shadow_r)
       elif render_mode == 'dynamic':
@@ -1809,8 +1810,9 @@ class DecomposeNerfModel(NerfModel):
     med_points = jnp.take_along_axis(
         # Unsqueeze axes: sample axis, coords.
         warped_points, depth_indices[..., None, None], axis=-2)
+    
+    # 不同场景的图片
     out['med_points'] = med_points
-
     out['sigma_d'] = sigma_d
     out['rgb_d'] = rgb_d
     out['rgb_s'] = rgb_s

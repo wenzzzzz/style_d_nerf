@@ -249,7 +249,10 @@ def main(argv):
   rng, key = random.split(rng)
   params = {}
 
+  # 选择contruct_nerf的模型
   construct_nerf_func = models.construct_nerf if not train_config.use_decompose_nerf else models.construct_decompose_nerf
+  
+  ################## obtain the model ################## 
   model, params['model'] = construct_nerf_func(
       key,
       batch_size=train_config.batch_size,
@@ -309,6 +312,7 @@ def main(argv):
       hyper_alpha=hyper_alpha_sched(0),
       hyper_sheet_alpha=hyper_sheet_alpha_sched(0),
       )
+  
   scalar_params = training.ScalarParams(
       learning_rate=learning_rate_sched(0),
       elastic_loss_weight=elastic_loss_weight_sched(0),
@@ -455,7 +459,11 @@ def main(argv):
       train_eval_ids += list(eval_config.ex_runtime_eval_targets)
       train_eval_iter = datasource.create_iterator(train_eval_ids, batch_size=0)
 
+      #############################################################
+      # 给rays_dict, model计算出结果
+      # params: 就是model当前的params
       def _model_fn(key_0, key_1, params, rays_dict, extra_params):
+        
         out = model.apply({'params': params},
                           rays_dict,
                           extra_params=extra_params,
@@ -465,7 +473,9 @@ def main(argv):
                               'fine': key_1
                           },
                           mutable=False)
+        
         return jax.lax.all_gather(out, axis_name='batch')
+      #############################################################
 
       if FLAGS.debug:
         # vmap version for debugging
@@ -546,6 +556,7 @@ def process_iterator(tag: str,
 
     # model_out是render之后的结果, state: model_utils.TrainState,  rng: The random number generator.
     logging.info('calculating model_out')
+
     model_out = render_fn(state, batch, rng=rng)
 
     plot_images(

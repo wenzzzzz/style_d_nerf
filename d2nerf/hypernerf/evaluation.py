@@ -132,6 +132,8 @@ def render_image(
     model_out = model_fn(key_0, key_1, state.optimizer.target['model'],
                          chunk_rays_dict, state.extra_params)
     
+    #主要看这个model_fn怎么搞
+    
 
     if not default_ret_key:
       ret_key = 'fine' if 'fine' in model_out else 'coarse'
