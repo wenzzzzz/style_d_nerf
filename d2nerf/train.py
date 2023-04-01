@@ -299,8 +299,8 @@ def main(argv):
   shadow_r_loss_weight_sched = schedules.from_config(train_config.shadow_r_loss_weight)
 
 
-
   optimizer_def = optim.Adam(learning_rate_sched(0))
+
   if train_config.use_weight_norm:
     optimizer_def = optim.WeightNorm(optimizer_def)
 
@@ -346,6 +346,7 @@ def main(argv):
     # copy source gin config for better readability
     shutil.copy(gin_configs[0], exp_dir / 'source.gin')
 
+  ##################### 主要看这个training.train_step ##################### 
   train_step = functools.partial(
       training.train_step, # rng_key, state, batch, scalar_params
       model,
@@ -377,7 +378,6 @@ def main(argv):
         donate_argnums=(2,),  # Donate the 'batch' argument -- arguments that are no longer needed after computation can be donated to reduce memory requirement
     )
 
-
   if devices:
     n_local_devices = len(devices)
   else:
@@ -389,10 +389,15 @@ def main(argv):
   keys = random.split(rng, n_local_devices)
   time_tracker = utils.TimeTracker()
   time_tracker.tic('data', 'total')
+
+  # 看一下这个zip是啥意思 
+  # The zip() function returns a zip object, which is an iterator of tuples where the first item in each passed iterator is paired together, 
+  # and then the second item in each passed iterator are paired together etc.
   for step, batch in zip(range(init_step, train_config.max_steps + 1),
                          train_iter):
     if points_iter is not None:
       batch['background_points'] = next(points_iter)
+
     time_tracker.toc('data')
     # See: b/162398046.
     # pytype: disable=attribute-error
@@ -416,11 +421,19 @@ def main(argv):
 
     batch['ex_metadata'] = None
 
+    # The with statement is a replacement for commonly used try/finally error-handling statements.
     with time_tracker.record_time('train_step'):
+      # 这里是training的内容
+      #############################################
+
       state, stats, keys, model_out = ptrain_step(
           keys, state, batch, scalar_params)
+      
       time_tracker.toc('total')
 
+      # stats是精确度的结果
+      #############################################
+    
     if step % train_config.print_every == 0 and jax.process_index() == 0:
       logging.info('step=%d, nerf_alpha=%.04f, warp_alpha=%.04f, %s', step,
                    nerf_alpha_sched(step),
@@ -452,7 +465,11 @@ def main(argv):
 
     time_tracker.tic('data', 'total')
 
-    # Run time evaluation
+    #############################################################
+    # Run-time Evaluation
+    #############################################################
+    # 这块可以先不管，应该之后直接用
+    # 
     if step % eval_config.niter_runtime_eval == 0 and jax.process_index() == 0:
       train_eval_ids = utils.strided_subset(
           datasource.train_ids, eval_config.nimg_runtime_eval) 
@@ -464,7 +481,6 @@ def main(argv):
       # 给rays_dict, model计算出结果
       # params: 就是model当前的params
       def _model_fn(key_0, key_1, params, rays_dict, extra_params):
-
         out = model.apply({'params': params},
                           rays_dict,
                           extra_params=extra_params,
