@@ -190,6 +190,11 @@ def main(argv):
 
   # Get directory information.
   exp_dir = gpath.GPath(FLAGS.base_folder)
+  
+  old_exp_dir = exp_dir
+
+  exp_dir = f'{old_exp_dir}_style'
+
   if exp_config.subname:
     exp_dir = exp_dir / exp_config.subname
   summary_dir = exp_dir / 'summaries' / 'train'

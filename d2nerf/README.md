@@ -76,14 +76,14 @@ To check how eval works:
 
 To apply artistic radiance fields on the static nerf,
     
-    export DATASET_PATH=data/pick
-    export EXPERIMENT_PATH=logs/pick
-    export CONFIG_PATH=configs/rl/004.gin
+    export DATASET_PATH_STYLE=data/pick
+    export EXPERIMENT_PATH_STYLE=logs_style/pick #存在一个新的位置
+    export CONFIG_PATH_STYLE=configs/rl/004.gin
 
     python train_style_static.py \
-        --base_folder $EXPERIMENT_PATH \
-        --gin_bindings="data_dir='$DATASET_PATH'" \
-        --gin_configs $CONFIG_PATH
+        --base_folder $EXPERIMENT_PATH_STYLE \
+        --gin_bindings="data_dir='$DATASET_PATH_STYLE'" \
+        --gin_configs $CONFIG_PATH_STYLE
     
 
 We also provide an example script at `train_eval_balloon.sh`.

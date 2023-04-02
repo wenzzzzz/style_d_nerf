@@ -487,7 +487,6 @@ def main(argv):
   logging.info('Found %d total devices: %s.', jax.device_count(),
                str(jax.devices()))
   
-  time.sleep(10)
 
   rng = random.PRNGKey(20200823) # rng key fixed, might abstract that to config
 
@@ -497,7 +496,7 @@ def main(argv):
 
 
   # Dummy model for configuratin datasource.
-  print('use_decompose_nerf', train_config.use_decompose_nerf)
+  print('use_decompose_nerf', train_config.use_decompose_nerf) # True
 
   if train_config.use_decompose_nerf:
     dummy_model = models.DecomposeNerfModel({}, 0, 0)
