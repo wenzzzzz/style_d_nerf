@@ -360,6 +360,10 @@ def main(argv):
 
   print('init_step', init_step)
 
+  #因为是直接load的 所以直接到了100000
+  #loaded step 100000
+  #init_step 100001
+
   state = jax_utils.replicate(state, devices=devices)
   del params
 
