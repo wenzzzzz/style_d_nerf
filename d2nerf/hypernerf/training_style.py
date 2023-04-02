@@ -486,7 +486,8 @@ def train_step(model: models.NerfModel,
 
     losses = {}
     stats = {}
-
+    
+    print('wwwwwwenzhao------------')
     print('ret', ret)
     time.sleep(100)
 
