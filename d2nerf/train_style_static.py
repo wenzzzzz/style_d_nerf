@@ -181,7 +181,6 @@ def main(argv):
   # add a few more steps to run for debug
   if FLAGS.debug:
     train_config.max_steps += 100
-
   if train_config.use_decompose_nerf:
     dummy_model = models.DecomposeNerfModel({}, 0, 0)
   else:
@@ -190,14 +189,13 @@ def main(argv):
 
   # Get directory information.
   print(FLAGS.base_folder, 'FLAGS.base_folder')
+  
   temp_dir = FLAGS.base_folder
-  new_dir = temp_dir.replace("_style", "111")
-  print('new_dir', new_dir)
+  orig_dir_path = temp_dir.replace("_style", "_style_static")
+  print('new_dir', orig_dir_path)
+  orig_dir = gpath.GPath(orig_dir_path) # 用于访问之前train好的模型
 
   exp_dir = gpath.GPath(FLAGS.base_folder)
-
-  exp_dir = exp_dir / 'style_static'
-
   if exp_config.subname:
     exp_dir = exp_dir / exp_config.subname
   summary_dir = exp_dir / 'summaries' / 'train'
