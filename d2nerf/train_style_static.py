@@ -190,6 +190,9 @@ def main(argv):
 
   # Get directory information.
   print(FLAGS.base_folder, 'FLAGS.base_folder')
+  temp_dir = FLAGS.base_folder
+  new_dir = temp_dir.replace("_style", "111")
+  print('new_dir', new_dir)
 
   exp_dir = gpath.GPath(FLAGS.base_folder)
 
