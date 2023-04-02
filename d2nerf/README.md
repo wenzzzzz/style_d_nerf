@@ -77,7 +77,7 @@ To check how eval works:
 To apply artistic radiance fields on the static nerf,
     
     export DATASET_PATH_STYLE=data/pick
-    export EXPERIMENT_PATH_STYLE=logs_style/pick #存在一个新的位置
+    export EXPERIMENT_PATH_STYLE=logs_style/pick # 存在一个新的位置
     export CONFIG_PATH_STYLE=configs/rl/004.gin
 
     python train_style_static.py \
