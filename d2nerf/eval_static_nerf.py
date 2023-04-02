@@ -462,12 +462,16 @@ def main(argv):
     renders_dir = exp_dir / f'renders-{eval_config.subname}'
   else:
     renders_dir = exp_dir / 'renders'
+
+
   logging.info('\trenders_dir = %s', renders_dir)
   if not renders_dir.exists():
     renders_dir.mkdir(parents=True, exist_ok=True)
 
+  # 存已经训练好的模型的地方
   checkpoint_dir = exp_dir / 'checkpoints'
   logging.info('\tcheckpoint_dir = %s', checkpoint_dir)
+
 
   logging.info('Starting process %d. There are %d processes.',
                jax.process_index(), jax.process_count())
@@ -476,20 +480,23 @@ def main(argv):
   logging.info('Found %d total devices: %s.', jax.device_count(),
                str(jax.devices()))
 
+
   rng = random.PRNGKey(20200823) # rng key fixed, might abstract that to config
 
   devices_to_use = jax.local_devices()
   n_devices = len(
       devices_to_use) if devices_to_use else jax.local_device_count()
 
-  logging.info('Creating datasource')
 
   # Dummy model for configuratin datasource.
   print('use_decompose_nerf', train_config.use_decompose_nerf)
+
   if train_config.use_decompose_nerf:
     dummy_model = models.DecomposeNerfModel({}, 0, 0)
   else:
     dummy_model = models.NerfModel({}, 0, 0)
+
+  logging.info('Creating datasource')
 
   datasource = exp_config.datasource_cls(
       image_scale=exp_config.image_scale,
@@ -507,6 +514,7 @@ def main(argv):
   train_eval_ids = utils.strided_subset(
       datasource.train_ids, eval_config.num_train_eval) # returns eval_config.num_train_eval+1 evenly spaced samples 
   # train_eval_ids = ['000133']
+
   if train_eval_ids:
     train_eval_iter = datasource.create_iterator(train_eval_ids, batch_size=0)
   else:
@@ -624,7 +632,11 @@ def main(argv):
   if train_config.use_weight_norm:
     optimizer_def = optim.WeightNorm(optimizer_def)
   optimizer = optimizer_def.create(params)
-  init_state = model_utils.TrainState(optimizer=optimizer)
+
+  # TrainState: Stores training state, including the optimizer and model params. 
+  # 把optimizer扔进去
+  init_state = model_utils.TrainState(optimizer=optimizer) 
+
   del params
 
   def _model_fn(key_0, key_1, params, rays_dict, extra_params):
@@ -637,6 +649,7 @@ def main(argv):
                           'fine': key_1
                       },
                       mutable=False)
+    
     return jax.lax.all_gather(out, axis_name='batch')
 
   if FLAGS.debug:
@@ -667,14 +680,18 @@ def main(argv):
   summary_writer = tensorboard.SummaryWriter(str(summary_dir))
 
   while True:
-    if not checkpoint_dir.exists():
+    if not checkpoint_dir.exists(): # 这里为啥不直接退出？？？
       logging.info('No checkpoints yet.')
       time.sleep(10)
       continue
 
+    # flax 自带的教程 - https://flax.readthedocs.io/en/latest/guides/use_checkpointing.html
     state = checkpoints.restore_checkpoint(checkpoint_dir, init_state)
+    # load model 到 device上
     state = jax_utils.replicate(state, devices=devices_to_use)
+
     step = int(state.optimizer.state.step[0])
+
     if step <= last_step:
       logging.info('No new checkpoints (%d <= %d).', step, last_step)
       time.sleep(10)
@@ -693,6 +710,7 @@ def main(argv):
                       save_dir=save_dir,
                       datasource=datasource,
                       model=model)
+    
     if val_eval_iter:
       process_iterator(
           tag='val',
