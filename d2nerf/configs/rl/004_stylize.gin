@@ -8,7 +8,7 @@ TrainConfig.blendw_loss_weight_schedule = {
   'type': 'exp_increase',
   'initial_value': 0.0005,
   'final_value': 1.0,
-  'num_steps': 200000, # origin: 100000
+  'num_steps': 200000, 
   }
 TrainConfig.blendw_loss_skewness = 2.875
 
@@ -18,7 +18,7 @@ EvalConfig.num_train_eval = -1
 
 EvalConfig.num_test_eval = -1
 
-max_steps = 200000 # origin: 100000
+max_steps = 200000 
 
 EvalConfig.niter_runtime_eval = 25000
 
