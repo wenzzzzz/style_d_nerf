@@ -209,7 +209,7 @@ def main(argv):
   checkpoint_dir_orig = exp_dir_orig / 'checkpoints'
   logging.info('\checkpoint_dir_orig = %s', checkpoint_dir_orig)
   print('checkpoint_dir_orig', checkpoint_dir_orig)
-  
+
   time.sleep(10)
   
   renders_dir = exp_dir / f'renders-runtime'
@@ -323,13 +323,21 @@ def main(argv):
 
   optimizer = optimizer_def.create(params)
 
-  state = model_utils.TrainState(
-      optimizer=optimizer,
-      nerf_alpha=nerf_alpha_sched(0),
-      warp_alpha=warp_alpha_sched(0),
-      hyper_alpha=hyper_alpha_sched(0),
-      hyper_sheet_alpha=hyper_sheet_alpha_sched(0),
-      )
+  # state = model_utils.TrainState(
+  #     optimizer=optimizer,
+  #     nerf_alpha=nerf_alpha_sched(0),
+  #     warp_alpha=warp_alpha_sched(0),
+  #     hyper_alpha=hyper_alpha_sched(0),
+  #     hyper_sheet_alpha=hyper_sheet_alpha_sched(0),
+  #     )
+  # add by wenzhao
+  init_state = model_utils.TrainState(optimizer=optimizer) 
+  # devices_to_use = jax.local_devices()
+  # 这里的state需要直接用之前已经训练好的模型
+  # flax 自带的教程 - https://flax.readthedocs.io/en/latest/guides/use_checkpointing.html
+  state = checkpoints.restore_checkpoint(checkpoint_dir_orig, init_state)
+  # load model 到 device上
+  # state = jax_utils.replicate(state, devices=devices_to_use)
   
   scalar_params = training.ScalarParams(
       learning_rate=learning_rate_sched(0),
@@ -344,12 +352,19 @@ def main(argv):
       blendw_area_loss_weight=train_config.blendw_area_loss_weight,
       shadow_r_loss_weight=shadow_r_loss_weight_sched(0),
       hyper_reg_loss_weight=train_config.hyper_reg_loss_weight)
-  state = checkpoints.restore_checkpoint(checkpoint_dir, state)
+  
+  # state = checkpoints.restore_checkpoint(checkpoint_dir, state)
 
   print(f'Loaded step {state.optimizer.state.step}')
   init_step = state.optimizer.state.step + 1
+
+  print('init_step', init_step)
+
   state = jax_utils.replicate(state, devices=devices)
   del params
+
+  time.sleep(10)
+
 
   summary_writer = None
   if jax.process_index() == 0:
@@ -359,9 +374,9 @@ def main(argv):
       f.write(config_str)
     summary_writer = tensorboard.SummaryWriter(str(summary_dir))
     summary_writer.text('gin/train', textdata=gin.markdown(config_str), step=0)
-
     # copy source gin config for better readability
     shutil.copy(gin_configs[0], exp_dir / 'source.gin')
+
 
   ##################### 主要看这个training.train_step ##################### 
   train_step = functools.partial(
@@ -400,6 +415,7 @@ def main(argv):
   else:
     n_local_devices = jax.local_device_count()
 
+
   logging.info('Starting training')
   # Make random seed separate across processes.
   rng = rng + jax.process_index()
@@ -407,7 +423,7 @@ def main(argv):
   time_tracker = utils.TimeTracker()
   time_tracker.tic('data', 'total')
 
-  # 看一下这个zip是啥意思 
+ 
   # The zip() function returns a zip object, which is an iterator of tuples where the first item in each passed iterator is paired together, 
   # and then the second item in each passed iterator are paired together etc.
   for step, batch in zip(range(init_step, train_config.max_steps + 1),
