@@ -67,6 +67,12 @@ launch an evaluation job by running:
         --gin_bindings="data_dir='$DATASET_PATH'" \
         --gin_configs $CONFIG_PATH
 
+To check how eval works:
+    python eval_static_nerf.py \
+        --base_folder $EXPERIMENT_PATH \
+        --gin_bindings="data_dir='$DATASET_PATH'" \
+        --gin_configs $CONFIG_PATH
+
 
 To apply artistic radiance fields on the static nerf,
     

@@ -446,7 +446,10 @@ def main(argv):
   exp_dir = gpath.GPath(FLAGS.base_folder)
   if exp_config.subname:
     exp_dir = exp_dir / exp_config.subname
+
   logging.info('\texp_dir = %s', exp_dir)
+  time.sleep(10)
+
   if not exp_dir.exists():
     exp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -454,7 +457,9 @@ def main(argv):
     summary_dir = exp_dir / 'summaries' / f'eval-{eval_config.subname}'
   else:
     summary_dir = exp_dir / 'summaries' / 'eval'
+  
   logging.info('\tsummary_dir = %s', summary_dir)
+
   if not summary_dir.exists():
     summary_dir.mkdir(parents=True, exist_ok=True)
 
@@ -467,6 +472,7 @@ def main(argv):
   logging.info('\trenders_dir = %s', renders_dir)
   if not renders_dir.exists():
     renders_dir.mkdir(parents=True, exist_ok=True)
+
 
   # 存已经训练好的模型的地方
   checkpoint_dir = exp_dir / 'checkpoints'
