@@ -14,7 +14,8 @@
 
 """Library to training NeRFs."""
 import functools
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Union, Optional, Sequence
+
 
 from absl import logging
 import flax
@@ -32,6 +33,8 @@ from jax import vmap
 from hypernerf import model_utils
 from hypernerf import models
 from hypernerf import utils
+from hypernerf import image_utils
+from hypernerf import gpath
 
 import pdb
 import time
@@ -55,6 +58,32 @@ class ScalarParams:
   cubic_shadow_r_loss_weight: float = 0.0
   background_noise_std: float = 0.001
   hyper_reg_loss_weight: float = 0.0
+
+
+def plot_images(model_out: Any,
+                save_dir: gpath.GPath,
+                extra_render_tags=None,
+                tag: str = 'wenzhao',
+                item_id: str = 'wenzhao',
+                ):
+  """Process and plot a single batch."""
+  item_id = item_id.replace('/', '_')
+  rgb = model_out['rgb'][..., :3]
+
+  save_dir = save_dir / tag
+  save_dir.mkdir(parents=True, exist_ok=True)
+  # regular_rgb_000002.png
+  image_utils.save_image(save_dir / f'regular_rgb_{item_id}.png',
+                          image_utils.image_to_uint8(rgb))
+
+  # extra_render_tags: ('static', 'dynamic', 'blendw', 'mask', 'shadow', 'regular_no_shadow')
+  # save_dir: save_dir / f'{step:08d}' / tag
+
+  if extra_render_tags is not None:
+    for extra_tag in extra_render_tags:
+      # dynamic_rgb_000002.png
+      image_utils.save_image(save_dir / f'{extra_tag}_rgb_{item_id}.png',
+                            image_utils.image_to_uint8(model_out[f'extra_rgb_{extra_tag}'][..., :3]))
 
 
 def save_checkpoint(path, state, keep=2):
@@ -280,6 +309,8 @@ def train_step(model: models.NerfModel,
                state: model_utils.TrainState,
                batch: Dict[str, Any],
                scalar_params: ScalarParams,
+               save_dir: gpath.GPath,
+               extra_render_tags: Optional[tuple],
                disable_hyper_grads: bool = False,
                grad_max_val: float = 0.0,
                grad_max_norm: float = 0.0,
@@ -289,7 +320,8 @@ def train_step(model: models.NerfModel,
                use_background_loss: bool = False,
                use_warp_reg_loss: bool = False,
                use_hyper_reg_loss: bool = False,
-               use_lap_blendw_loss: bool = False):
+               use_lap_blendw_loss: bool = False,
+               ):
   """One optimization step.
 
   Args:
@@ -489,6 +521,11 @@ def train_step(model: models.NerfModel,
     
     print('wwwwwwenzhao------------')
     print('ret', ret)
+    plot_images(
+      model_out=ret,
+      save_dir=save_dir,
+      extra_render_tags=extra_render_tags)
+    
     time.sleep(100)
 
     # if 'fine' in ret:

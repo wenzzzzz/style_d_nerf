@@ -214,6 +214,9 @@ def main(argv):
   time.sleep(10)
   
   renders_dir = exp_dir / f'renders-runtime'
+
+  render_style_dir = renders_dir / f'style_test'
+
   logging.info('\trenders_dir = %s', renders_dir)
   if not renders_dir.exists():
     renders_dir.mkdir(parents=True, exist_ok=True)
@@ -399,6 +402,8 @@ def main(argv):
   train_step = functools.partial(
       training_style.train_step, # rng_key, state, batch, scalar_params
       model,
+      save_dir=render_style_dir
+      extra_render_tags= extra_render_tags
       elastic_reduce_method=train_config.elastic_reduce_method,
       elastic_loss_type=train_config.elastic_loss_type,
       use_elastic_loss=train_config.use_elastic_loss,
