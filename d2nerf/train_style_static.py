@@ -46,6 +46,7 @@ from hypernerf import image_utils
 from hypernerf import models
 from hypernerf import schedules
 from hypernerf import training
+from hypernerf import training_style
 from hypernerf import utils
 from hypernerf import types
 from hypernerf import evaluation
@@ -64,7 +65,7 @@ FLAGS = flags.FLAGS
 
 def _log_to_tensorboard(writer: tensorboard.SummaryWriter,
                         state: model_utils.TrainState,
-                        scalar_params: training.ScalarParams,
+                        scalar_params: training_style.ScalarParams,
                         stats: Dict[str, Union[Dict[str, jnp.ndarray],
                                                jnp.ndarray]],
                         time_dict: Dict[str, jnp.ndarray]):
@@ -323,23 +324,23 @@ def main(argv):
 
   optimizer = optimizer_def.create(params)
 
-  # state = model_utils.TrainState(
-  #     optimizer=optimizer,
-  #     nerf_alpha=nerf_alpha_sched(0),
-  #     warp_alpha=warp_alpha_sched(0),
-  #     hyper_alpha=hyper_alpha_sched(0),
-  #     hyper_sheet_alpha=hyper_sheet_alpha_sched(0),
-  #     )
+  state = model_utils.TrainState(
+      optimizer=optimizer,
+      nerf_alpha=nerf_alpha_sched(0),
+      warp_alpha=warp_alpha_sched(0),
+      hyper_alpha=hyper_alpha_sched(0),
+      hyper_sheet_alpha=hyper_sheet_alpha_sched(0),
+      )
   # add by wenzhao
-  init_state = model_utils.TrainState(optimizer=optimizer) 
+  # init_state = model_utils.TrainState(optimizer=optimizer) 
   # devices_to_use = jax.local_devices()
   # 这里的state需要直接用之前已经训练好的模型
   # flax 自带的教程 - https://flax.readthedocs.io/en/latest/guides/use_checkpointing.html
-  state = checkpoints.restore_checkpoint(checkpoint_dir_orig, init_state)
+  # state = checkpoints.restore_checkpoint(checkpoint_dir_orig, init_state)
   # load model 到 device上
   # state = jax_utils.replicate(state, devices=devices_to_use)
   
-  scalar_params = training.ScalarParams(
+  scalar_params = training_style.ScalarParams(
       learning_rate=learning_rate_sched(0),
       elastic_loss_weight=elastic_loss_weight_sched(0),
       warp_reg_loss_weight=train_config.warp_reg_loss_weight,
@@ -353,7 +354,7 @@ def main(argv):
       shadow_r_loss_weight=shadow_r_loss_weight_sched(0),
       hyper_reg_loss_weight=train_config.hyper_reg_loss_weight)
   
-  # state = checkpoints.restore_checkpoint(checkpoint_dir, state)
+  state = checkpoints.restore_checkpoint(checkpoint_dir, state)
 
   print(f'Loaded step {state.optimizer.state.step}')
   init_step = state.optimizer.state.step + 1
@@ -383,8 +384,20 @@ def main(argv):
 
 
   ##################### 主要看这个training.train_step ##################### 
+  # train_step = functools.partial(
+  #     training.train_step, # rng_key, state, batch, scalar_params
+  #     model,
+  #     elastic_reduce_method=train_config.elastic_reduce_method,
+  #     elastic_loss_type=train_config.elastic_loss_type,
+  #     use_elastic_loss=train_config.use_elastic_loss,
+  #     use_background_loss=train_config.use_background_loss,
+  #     use_warp_reg_loss=train_config.use_warp_reg_loss,
+  #     use_hyper_reg_loss=train_config.use_hyper_reg_loss,
+  #     use_lap_blendw_loss=train_config.use_lap_blendw_loss,
+  #     )
+  
   train_step = functools.partial(
-      training.train_step, # rng_key, state, batch, scalar_params
+      training_style.train_step, # rng_key, state, batch, scalar_params
       model,
       elastic_reduce_method=train_config.elastic_reduce_method,
       elastic_loss_type=train_config.elastic_loss_type,
@@ -485,7 +498,7 @@ def main(argv):
         logging.info('\tfine metrics: %s', fine_metrics_str)
 
     if step % train_config.save_every == 0 and jax.process_index() == 0:
-      training.save_checkpoint(checkpoint_dir, state, keep=2)
+      training_style.save_checkpoint(checkpoint_dir, state, keep=2)
 
     if step % train_config.log_every == 0 and jax.process_index() == 0:
       # Only log via process 0.
@@ -586,7 +599,7 @@ def main(argv):
               save_out=step==train_config.max_steps)
 
   if train_config.max_steps % train_config.save_every != 0:
-    training.save_checkpoint(checkpoint_dir, state, keep=2)
+    training_style.save_checkpoint(checkpoint_dir, state, keep=2)
 
   
 def process_iterator(tag: str,

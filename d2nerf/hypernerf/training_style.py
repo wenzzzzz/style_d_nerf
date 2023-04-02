@@ -34,6 +34,7 @@ from hypernerf import models
 from hypernerf import utils
 
 import pdb
+import time
 
 
 @struct.dataclass
@@ -316,6 +317,9 @@ def train_step(model: models.NerfModel,
   """
   rng_key, fine_key, coarse_key, reg_key = random.split(rng_key, 4)
 
+
+  # losses['fine'], stats['fine'] = _compute_loss_and_stats(
+          # params, ret['fine'], 'fine')
   # pylint: disable=unused-argument
   def _compute_loss_and_stats(
       params, model_out, level,
@@ -465,6 +469,81 @@ def train_step(model: models.NerfModel,
       stats['coarse_blendw'] = ret['coarse']['blendw'].mean()
       stats['fine_blendw'] = ret['fine']['blendw'].mean()
     return sum(losses.values()), (stats, ret)
+  
+
+  # 改成那篇paper的loss style
+  def _loss_fn_style(params):
+    ret = model.apply({'params': params['model']},
+                      batch,
+                      extra_params=state.extra_params,
+                      return_points=(use_warp_reg_loss or use_hyper_reg_loss),
+                      return_weights=(use_warp_reg_loss or use_elastic_loss), # whether return density weights
+                      return_warp_jacobian=use_elastic_loss,
+                      rngs={
+                          'fine': fine_key,
+                          'coarse': coarse_key
+                      })
+
+    losses = {}
+    stats = {}
+
+    print('ret', ret)
+    time.sleep(100)
+
+    # if 'fine' in ret:
+    #   losses['fine'], stats['fine'] = _compute_loss_and_stats(
+    #       params, ret['fine'], 'fine')
+    # if 'coarse' in ret:
+    #   losses['coarse'], stats['coarse'] = _compute_loss_and_stats(
+    #       params, ret['coarse'], 'coarse',
+    #       use_elastic_loss=use_elastic_loss,
+    #       use_hyper_reg_loss=use_hyper_reg_loss)
+
+    # if use_background_loss:
+    #   background_loss = compute_background_loss(
+    #       model,
+    #       state=state,
+    #       params=params['model'],
+    #       key=reg_key,
+    #       points=batch['background_points'],
+    #       noise_std=scalar_params.background_noise_std)
+    #   background_loss = background_loss.mean()
+    #   losses['background'] = (
+    #       scalar_params.background_loss_weight * background_loss)
+    #   stats['background_loss'] = background_loss
+
+    if isinstance(model,models.DecomposeNerfModel):
+      blendw_loss = compute_blendw_loss(ret['coarse']['blendw'], ret['fine']['blendw'], skewness=scalar_params.blendw_loss_skewness, use_lap=use_lap_blendw_loss)
+      blendw_loss = blendw_loss.mean()
+      losses['blendw_loss'] = (
+        scalar_params.blendw_loss_weight * blendw_loss)
+      stats['blendw_loss'] = blendw_loss
+
+      sigma_s_ray_loss = compute_sigma_s_ray_loss(ret)   
+      losses['sigma_s_ray_loss'] = (
+        scalar_params.sigma_s_ray_loss_weight * sigma_s_ray_loss)
+      stats['sigma_s_ray_loss'] = sigma_s_ray_loss
+
+      blendw_area_loss = compute_blendw_area_loss(ret['coarse']['blendw'], ret['fine']['blendw'])   
+      losses['blendw_area_loss'] = (
+        scalar_params.blendw_area_loss_weight * blendw_area_loss)
+      stats['blendw_area_loss'] = blendw_area_loss
+
+      if model.use_shadow_model:
+        # apply shadow model related loss
+        shadow_r_loss = compute_shadow_r_loss(ret)
+        losses['shadow_r_loss'] = (
+          scalar_params.shadow_r_loss_weight * shadow_r_loss)
+        stats['shadow_r_loss'] = shadow_r_loss
+
+      # log blendws
+      stats['coarse_blendw'] = ret['coarse']['blendw'].mean()
+      stats['fine_blendw'] = ret['fine']['blendw'].mean()
+
+
+
+    return sum(losses.values()), (stats, ret)
+
 
   optimizer = state.optimizer
   if disable_hyper_grads:
@@ -472,7 +551,8 @@ def train_step(model: models.NerfModel,
         state=zero_adam_param_states(optimizer.state, 'model/hyper_sheet_mlp'))
 
   # Create a function that evaluates both fun and the gradient of fun.
-  grad_fn = jax.value_and_grad(_loss_fn, has_aux=True)
+  grad_fn = jax.value_and_grad(_loss_fn_style, has_aux=True)
+
   (_, (stats, model_out)), grad = grad_fn(optimizer.target) # optimizer.target is model params
 
   grad = jax.lax.pmean(grad, axis_name='batch')
