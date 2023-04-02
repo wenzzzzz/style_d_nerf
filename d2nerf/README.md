@@ -58,6 +58,7 @@ After unzipping the data, you can train with the following command:
         --gin_bindings="data_dir='$DATASET_PATH'" \
         --gin_configs $CONFIG_PATH
 
+
 To plot telemetry to Tensorboard and render checkpoints on the fly, also
 launch an evaluation job by running:
 
@@ -65,6 +66,19 @@ launch an evaluation job by running:
         --base_folder $EXPERIMENT_PATH \
         --gin_bindings="data_dir='$DATASET_PATH'" \
         --gin_configs $CONFIG_PATH
+
+
+To apply artistic radiance fields on the static nerf,
+    
+    export DATASET_PATH=data/pick
+    export EXPERIMENT_PATH=logs/pick
+    export CONFIG_PATH=configs/rl/004.gin
+
+    python train_style_static.py \
+        --base_folder $EXPERIMENT_PATH \
+        --gin_bindings="data_dir='$DATASET_PATH'" \
+        --gin_configs $CONFIG_PATH
+    
 
 We also provide an example script at `train_eval_balloon.sh`.
 
