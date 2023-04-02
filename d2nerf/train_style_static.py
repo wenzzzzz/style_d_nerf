@@ -402,8 +402,6 @@ def main(argv):
   train_step = functools.partial(
       training_style.train_step, # rng_key, state, batch, scalar_params
       model,
-      save_dir=render_style_dir,
-      extra_render_tags= model.extra_renders,
       elastic_reduce_method=train_config.elastic_reduce_method,
       elastic_loss_type=train_config.elastic_loss_type,
       use_elastic_loss=train_config.use_elastic_loss,
