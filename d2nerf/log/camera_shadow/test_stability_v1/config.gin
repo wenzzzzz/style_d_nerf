@@ -1,0 +1,240 @@
+# Macros:
+# ==============================================================================
+batch_size = 1024
+CONSTANT_ELASTIC_LOSS_SCHED = {'type': 'constant', 'value': %elastic_init_weight}
+data_dir = './data/camera_shadow/'
+DEFAULT_LR_SCHEDULE = \
+    {'final_value': %final_lr,
+     'initial_value': %init_lr,
+     'num_steps': %max_steps,
+     'type': 'exponential'}
+elastic_init_weight = 0.01
+eval_batch_size = 8096
+final_lr = 1e-05
+hyper_num_dims = 4
+hyper_point_max_deg = 1
+hyper_point_min_deg = 0
+hyper_sheet_max_deg = 6
+hyper_sheet_min_deg = 0
+image_scale = 8
+init_lr = 0.001
+max_steps = 10000
+spatial_point_max_deg = 8
+warp_max_deg = 4
+warp_min_deg = 0
+
+# Parameters for DecomposeNerfModel:
+# ==============================================================================
+DecomposeNerfModel.activation = @jax.nn.relu
+DecomposeNerfModel.alpha_channels = 1
+DecomposeNerfModel.blend_mode = 'nsff'
+DecomposeNerfModel.blendw_mask_threshold = 0.5
+DecomposeNerfModel.blendw_out_depth = 7
+DecomposeNerfModel.deformation_render_scale = 2.0
+DecomposeNerfModel.extra_renders = ('dynamic', 'blendw')
+DecomposeNerfModel.handle_motion_blur = False
+DecomposeNerfModel.hyper_embed_key = 'appearance'
+DecomposeNerfModel.hyper_point_max_deg = %hyper_point_max_deg
+DecomposeNerfModel.hyper_point_min_deg = %hyper_point_min_deg
+DecomposeNerfModel.hyper_sheet_mlp_cls = @HyperSheetMLP
+DecomposeNerfModel.hyper_sheet_use_input_points = True
+DecomposeNerfModel.hyper_slice_method = 'bendy_sheet'
+DecomposeNerfModel.hyper_use_warp_embed = True
+DecomposeNerfModel.nerf_embed_key = 'appearance'
+DecomposeNerfModel.nerf_rgb_branch_depth = 1
+DecomposeNerfModel.nerf_rgb_branch_width = 128
+DecomposeNerfModel.nerf_skips = (4,)
+DecomposeNerfModel.nerf_trunk_depth = 8
+DecomposeNerfModel.nerf_trunk_width = 256
+DecomposeNerfModel.noise_std = None
+DecomposeNerfModel.norm_type = 'none'
+DecomposeNerfModel.num_coarse_samples = 64
+DecomposeNerfModel.num_fine_samples = 64
+DecomposeNerfModel.render_mode = 'both'
+DecomposeNerfModel.rgb_channels = 3
+DecomposeNerfModel.separate_shadow_model = False
+DecomposeNerfModel.shadow_r_shift = 0.0
+DecomposeNerfModel.sigma_threshold = 0.1
+DecomposeNerfModel.spatial_point_max_deg = 10
+DecomposeNerfModel.spatial_point_min_deg = 0
+DecomposeNerfModel.use_alpha_condition = False
+DecomposeNerfModel.use_linear_disparity = False
+DecomposeNerfModel.use_nerf_embed = False
+DecomposeNerfModel.use_posenc_identity = True
+DecomposeNerfModel.use_rgb_condition = False
+DecomposeNerfModel.use_sample_at_infinity = True
+DecomposeNerfModel.use_shadow_model = False
+DecomposeNerfModel.use_stratified_sampling = True
+DecomposeNerfModel.use_viewdirs = True
+DecomposeNerfModel.use_warp = True
+DecomposeNerfModel.use_white_background = False
+DecomposeNerfModel.viewdir_max_deg = 4
+DecomposeNerfModel.viewdir_min_deg = 0
+DecomposeNerfModel.warp_embed_key = 'warp'
+
+# Parameters for EvalConfig:
+# ==============================================================================
+EvalConfig.chunk = %eval_batch_size
+EvalConfig.eval_once = True
+EvalConfig.ex_runtime_eval_targets = ('000031', '000111', '000133')
+EvalConfig.extra_tests = ('freeze-test',)
+EvalConfig.fix_time_eval = True
+EvalConfig.fix_view_eval = True
+EvalConfig.fixed_time_id = 0
+EvalConfig.fixed_view_id = 0
+EvalConfig.keep_gif_only = True
+EvalConfig.max_render_checkpoints = 3
+EvalConfig.nimg_runtime_eval = 3
+EvalConfig.niter_runtime_eval = 1000
+EvalConfig.normalise_rendering = False
+EvalConfig.novel_view_eval = False
+EvalConfig.num_fixed_time_views = -1
+EvalConfig.num_fixed_view_frames = -1
+EvalConfig.num_test_eval = -1
+EvalConfig.num_train_eval = -1
+EvalConfig.num_val_eval = -1
+EvalConfig.optim_lr = 0.0
+EvalConfig.optim_metadata = False
+EvalConfig.optim_tile_size = 0
+EvalConfig.save_output = True
+EvalConfig.subname = ''
+EvalConfig.use_train_views = True
+EvalConfig.use_tsne = False
+EvalConfig.val_argmin = False
+
+# Parameters for ExperimentConfig:
+# ==============================================================================
+ExperimentConfig.datasource_cls = @NerfiesDataSource
+ExperimentConfig.image_scale = %image_scale
+ExperimentConfig.mask_interest_region = False
+ExperimentConfig.random_seed = 0
+ExperimentConfig.render_mode = 'regular'
+ExperimentConfig.subname = None
+
+# Parameters for GLOEmbed:
+# ==============================================================================
+# None.
+
+# Parameters for HyperSheetMLP:
+# ==============================================================================
+HyperSheetMLP.depth = 6
+HyperSheetMLP.max_deg = %hyper_sheet_max_deg
+HyperSheetMLP.min_deg = %hyper_sheet_min_deg
+HyperSheetMLP.output_channels = %hyper_num_dims
+HyperSheetMLP.skips = (4,)
+HyperSheetMLP.use_residual = False
+HyperSheetMLP.width = 64
+
+# Parameters for NerfiesDataSource:
+# ==============================================================================
+NerfiesDataSource.camera_type = 'json'
+NerfiesDataSource.data_dir = %data_dir
+NerfiesDataSource.load_ex_test = None
+NerfiesDataSource.shuffle_pixels = False
+NerfiesDataSource.test_camera_trajectory = 'orbit-mild'
+NerfiesDataSource.use_gt_camera = False
+
+# Parameters for jax.nn.relu:
+# ==============================================================================
+# None.
+
+# Parameters for SE3Field:
+# ==============================================================================
+SE3Field.hyper_depth = 0
+SE3Field.hyper_init = None
+SE3Field.hyper_width = 0
+SE3Field.max_deg = %warp_max_deg
+SE3Field.min_deg = %warp_min_deg
+SE3Field.norm = None
+SE3Field.num_hyper_dims = 0
+SE3Field.pivot_depth = 0
+SE3Field.pivot_width = 128
+SE3Field.rotation_depth = 0
+SE3Field.rotation_width = 128
+SE3Field.skips = (4,)
+SE3Field.translation_depth = 0
+SE3Field.translation_width = 128
+SE3Field.trunk_depth = 6
+SE3Field.trunk_width = 128
+SE3Field.use_posenc_identity = False
+
+# Parameters for StaticNerfModel:
+# ==============================================================================
+StaticNerfModel.activation = @jax.nn.relu
+StaticNerfModel.alpha_channels = 1
+StaticNerfModel.nerf_embed_key = 'appearance'
+StaticNerfModel.nerf_rgb_branch_depth = 1
+StaticNerfModel.nerf_rgb_branch_width = 128
+StaticNerfModel.nerf_skips = (4,)
+StaticNerfModel.nerf_trunk_depth = 8
+StaticNerfModel.nerf_trunk_width = 256
+StaticNerfModel.noise_std = None
+StaticNerfModel.norm_type = 'none'
+StaticNerfModel.num_coarse_samples = 64
+StaticNerfModel.num_fine_samples = 64
+StaticNerfModel.rgb_channels = 3
+StaticNerfModel.spatial_point_max_deg = 10
+StaticNerfModel.spatial_point_min_deg = 0
+StaticNerfModel.use_alpha_condition = False
+StaticNerfModel.use_linear_disparity = False
+StaticNerfModel.use_nerf_embed = False
+StaticNerfModel.use_posenc_identity = True
+StaticNerfModel.use_rgb_condition = False
+StaticNerfModel.use_sample_at_infinity = True
+StaticNerfModel.use_stratified_sampling = True
+StaticNerfModel.use_viewdirs = True
+StaticNerfModel.use_white_background = False
+StaticNerfModel.viewdir_max_deg = 4
+StaticNerfModel.viewdir_min_deg = 0
+
+# Parameters for TrainConfig:
+# ==============================================================================
+TrainConfig.background_loss_weight = 1.0
+TrainConfig.background_points_batch_size = 16384
+TrainConfig.batch_size = %batch_size
+TrainConfig.blendw_area_loss_weight = 0.0001
+TrainConfig.blendw_loss_skewness = 1.25
+TrainConfig.blendw_loss_weight_schedule = \
+    {'final_value': 0.5,
+     'initial_value': 0.001,
+     'num_steps': 200000,
+     'type': 'linear'}
+TrainConfig.curvature_loss_alpha = 0
+TrainConfig.curvature_loss_scale = 0
+TrainConfig.curvature_loss_spacing = 0
+TrainConfig.curvature_loss_weight_schedule = None
+TrainConfig.elastic_loss_type = 'log_svals'
+TrainConfig.elastic_loss_weight_schedule = %CONSTANT_ELASTIC_LOSS_SCHED
+TrainConfig.elastic_reduce_method = 'weight'
+TrainConfig.histogram_every = 100
+TrainConfig.hyper_alpha_schedule = \
+    {'schedules': [(1000, ('constant', 0.0)),
+                   (0, ('linear', 0.0, %hyper_point_max_deg, 10000))],
+     'type': 'piecewise'}
+TrainConfig.hyper_reg_loss_weight = 0.001
+TrainConfig.hyper_sheet_alpha_schedule = ('constant', %hyper_sheet_max_deg)
+TrainConfig.log_every = 100
+TrainConfig.lr_schedule = %DEFAULT_LR_SCHEDULE
+TrainConfig.max_steps = %max_steps
+TrainConfig.nerf_alpha_schedule = ('constant', %spatial_point_max_deg)
+TrainConfig.print_every = 100
+TrainConfig.save_every = 2000
+TrainConfig.shuffle_buffer_size = 5000000
+TrainConfig.sigma_s_ray_loss_weight = 0.0
+TrainConfig.use_background_loss = False
+TrainConfig.use_curvature_loss = False
+TrainConfig.use_decompose_nerf = True
+TrainConfig.use_elastic_loss = False
+TrainConfig.use_ex_ray_entropy_loss = True
+TrainConfig.use_hyper_reg_loss = False
+TrainConfig.use_lap_blendw_loss = False
+TrainConfig.use_warp_reg_loss = True
+TrainConfig.use_weight_norm = False
+TrainConfig.warp_alpha_schedule = \
+    {'final_value': %warp_max_deg,
+     'initial_value': %warp_min_deg,
+     'num_steps': 50000,
+     'type': 'linear'}
+TrainConfig.warp_reg_loss_alpha = -2.0
+TrainConfig.warp_reg_loss_scale = 0.001
+TrainConfig.warp_reg_loss_weight = 0.001
