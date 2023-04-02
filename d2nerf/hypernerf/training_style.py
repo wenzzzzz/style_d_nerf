@@ -41,7 +41,22 @@ import time
 
 from hypernerf import nnfm_loss
 
-# from nnfm_loss import NNFMLoss, match_colors_for_image_set
+import torch
+import torch.optim
+import torch.nn.functional as F
+import json
+import os
+from os import path
+import shutil
+import gc
+import numpy as np
+import math
+import argparse
+
+from warnings import warn
+from datetime import datetime
+
+from nnfm_loss import NNFMLoss, match_colors_for_image_set
 
 
 @struct.dataclass
@@ -74,7 +89,6 @@ def plot_images(model_out: Any,
   item_id = item_id.replace('/', '_')
   rgb = model_out['rgb'][..., :3]
 
-  save_dir = save_dir / tag
   save_dir.mkdir(parents=True, exist_ok=True)
   # regular_rgb_000002.png
   image_utils.save_image(save_dir / f'regular_rgb_{item_id}.png',
@@ -529,6 +543,9 @@ def train_step(model: models.NerfModel,
     #   extra_render_tags=extra_render_tags)
     
     time.sleep(100)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    nnfm_loss_fn = NNFMLoss(device=device)
 
     # if 'fine' in ret:
     #   losses['fine'], stats['fine'] = _compute_loss_and_stats(
