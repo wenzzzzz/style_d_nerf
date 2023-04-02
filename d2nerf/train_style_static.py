@@ -35,6 +35,8 @@ import tensorflow as tf
 import pdb
 from jax.config import config as jax_config
 import shutil
+import os
+import time
 
 from hypernerf import configs
 from hypernerf import datasets
@@ -191,16 +193,25 @@ def main(argv):
   print(FLAGS.base_folder, 'FLAGS.base_folder')
   
   temp_dir = FLAGS.base_folder
-  orig_dir_path = temp_dir.replace("_style", "_style_static")
+  orig_dir_path = temp_dir.replace("_style", "")
   print('new_dir', orig_dir_path)
-  orig_dir = gpath.GPath(orig_dir_path) # 用于访问之前train好的模型
+  exp_dir_orig = gpath.GPath(orig_dir_path) # 用于访问之前train好的模型
 
   exp_dir = gpath.GPath(FLAGS.base_folder)
   if exp_config.subname:
     exp_dir = exp_dir / exp_config.subname
   summary_dir = exp_dir / 'summaries' / 'train'
+
+  # 用于存再次stylize之后的模型
   checkpoint_dir = exp_dir / 'checkpoints'
 
+  # 之前已经训练好模型的checkpoint
+  checkpoint_dir_orig = exp_dir_orig / 'checkpoints'
+  logging.info('\checkpoint_dir_orig = %s', checkpoint_dir_orig)
+  print('checkpoint_dir_orig', checkpoint_dir_orig)
+  
+  time.sleep(10)
+  
   renders_dir = exp_dir / f'renders-runtime'
   logging.info('\trenders_dir = %s', renders_dir)
   if not renders_dir.exists():
