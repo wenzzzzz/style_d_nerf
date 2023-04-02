@@ -39,6 +39,10 @@ from hypernerf import gpath
 import pdb
 import time
 
+from hypernerf import nnfm_loss
+
+# from nnfm_loss import NNFMLoss, match_colors_for_image_set
+
 
 @struct.dataclass
 class ScalarParams:
@@ -521,10 +525,10 @@ def train_step(model: models.NerfModel,
     
     print('wwwwwwenzhao------------')
     print('ret', ret)
-    plot_images(
-      model_out=ret,
-      save_dir=save_dir,
-      extra_render_tags=extra_render_tags)
+    # plot_images(
+    #   model_out=ret,
+    #   save_dir=save_dir,
+    #   extra_render_tags=extra_render_tags)
     
     time.sleep(100)
 
