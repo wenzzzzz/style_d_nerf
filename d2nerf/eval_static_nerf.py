@@ -448,25 +448,26 @@ def main(argv):
     exp_dir = exp_dir / exp_config.subname
 
   logging.info('\texp_dir = %s', exp_dir)
-  time.sleep(10)
+  
 
   if not exp_dir.exists():
     exp_dir.mkdir(parents=True, exist_ok=True)
 
   if eval_config.subname:
-    summary_dir = exp_dir / 'summaries' / f'eval-{eval_config.subname}'
+    summary_dir = exp_dir / 'summaries' / f'eval_style-{eval_config.subname}'
   else:
-    summary_dir = exp_dir / 'summaries' / 'eval'
+    summary_dir = exp_dir / 'summaries' / 'eval_style'
   
   logging.info('\tsummary_dir = %s', summary_dir)
+  
 
   if not summary_dir.exists():
     summary_dir.mkdir(parents=True, exist_ok=True)
 
   if eval_config.subname:
-    renders_dir = exp_dir / f'renders-{eval_config.subname}'
+    renders_dir = exp_dir / f'renders_style-{eval_config.subname}'
   else:
-    renders_dir = exp_dir / 'renders'
+    renders_dir = exp_dir / 'renders_style'
 
 
   logging.info('\trenders_dir = %s', renders_dir)
@@ -485,7 +486,8 @@ def main(argv):
                str(jax.local_devices()))
   logging.info('Found %d total devices: %s.', jax.device_count(),
                str(jax.devices()))
-
+  
+  time.sleep(10)
 
   rng = random.PRNGKey(20200823) # rng key fixed, might abstract that to config
 
